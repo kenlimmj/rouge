@@ -1,6 +1,6 @@
 {
   "name": "rouge",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Recall-Oriented Understudy for Gisting Evaluation (ROUGE) Evaluation Functions",
   "main": "rouge.js",
   "scripts": {
