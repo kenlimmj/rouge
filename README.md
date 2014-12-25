@@ -27,7 +27,7 @@ A small but growing number of tests are written in Mocha. To run them:
 ```shell
 npm test
 ```
-should give you many lines of colorful text in your CLI. Naturally, you'll need to have Mocha installed, but you knew that already.
+This should give you many lines of colorful text in your CLI. Naturally, you'll need to have Mocha installed, but you knew that already.
 
 ## Usage
 All three functions follow more-or-less the same type signature by design, so what works with one will work with the other. Where possible, I've tried to write everything such that it's as fast as possible, but if you're going to be doing some serious crunching, consider using a lower-level language.
@@ -38,10 +38,13 @@ A caveat: The original paper is ambiguous in some areas, but I've tried to be as
 Calculates a metric based on word n-gram matches. If ``n`` is not specified, it defaults to 1, because the law of the land claims that good approximation of human judgment occurs when unigrams are considered. If ``jackknife`` is not specified, it defaults to ``true``.
 
 ```js
-// Where `candidate` and `reference` are both strings. This uses unigrams with jackknifing.
+// Where `candidate` and `reference` are both strings. 
+// This uses unigrams with jackknifing.
 rouge.n(candidate, reference, 1);
 
-// Where `candidate` is a string, and the second argument is a string array, i.e. `reference1` and `reference2` are strings. This uses bigrams with jackknifing disabled.
+// Where `candidate` is a string, and the second argument is a string array, 
+// i.e. `reference1` and `reference2` are strings. 
+// This uses bigrams with jackknifing disabled.
 rouge.n(candidate, [reference1, reference2], 2, false);
 ```
 
@@ -52,7 +55,9 @@ Calculates a metric based on the longest common subsequence (LCS) of words. If `
 // Where `candidate` and `reference` are both strings.
 rouge.l(candidate, reference);
 
-// Where `candidate` is a string, and the second argument is a string array, i.e. `reference1` and `reference2` are strings. This performs the calculation with jackknifing disabled.
+// Where `candidate` is a string, and the second argument is a string array, 
+// i.e. `reference1` and `reference2` are strings. 
+// This performs the calculation with jackknifing disabled.
 rouge.l(candidate, [reference1, reference2], false);
 ```
 
@@ -63,7 +68,9 @@ Calculates a metric based on skip bigrams. If ``jackknife`` is not specified, it
 // Where `candidate` and `reference` are both strings.
 rouge.s(candidate, reference);
 
-// Where `candidate` is a string, and the second argument is a string array, i.e. `reference1` and `reference2` are strings. This performs the calculation with jackknifing disabled.
+// Where `candidate` is a string, and the second argument is a string array, 
+// i.e. `reference1` and `reference2` are strings.
+// This performs the calculation with jackknifing disabled.
 rouge.s(candidate, [reference1, reference2], false);
 ```
 
