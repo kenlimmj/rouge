@@ -1,8 +1,10 @@
 /*
  * @Author: Lim Mingjie, Kenneth
  * @Date:   2014-12-21 01:48:14
- * @Last Modified by:   Lim Mingjie, Kenneth
- * @Last Modified time: 2014-12-26 01:25:58
+ * @Last Modified by:   Astrianna
+ * @Last Modified time: 2015-01-14 17:08:24
+ *
+ * @flow
  */
 
 'use strict';
@@ -204,12 +206,7 @@
          * @param  Boolean jackKnife    Flag for whether jackknifing should be used
          * @return Number               The calculated ROUGE-N value
          */
-        var evalNGram = function(candidate, reference, n, jackKnife) {
-            // Specify some sane defaults. The original paper suggests that unigrams
-            // give good approximation of human behavior, and statistics is a nice thing.
-            var n = n || 1,
-                jackKnife = jackKnife !== false;
-
+        var evalNGram = function(candidate, reference, n=1, jackKnife=false) {
             // Tokenize the candidate input and extract grams
             var candidateWords = candidate.match(/\w+/g),
                 candidateGrams = extractGram(candidateWords, n);
