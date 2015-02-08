@@ -101,7 +101,7 @@ Before opening any issue, please search for existing issues and read the [Issue 
 
 ## Contributing
 
-Please submit all pull requests against *-wip branches. All code should pass JSHint/JSLint validation.
+Please submit all pull requests against *-wip branches. All code should pass JSHint/JSLint validation. Note that files in ``/src`` are written in ES6 syntax and transpiled to corresponding files in ``/dist`` using 6to5. 
 
 The amount of data available for writing tests is unfortunately woefully inadequate. I've tried to be as thorough as possible, but that eliminates neither the possibility of nor existence of errors. The gold standard is the DUC data-set, but that too is form-walled and legal-release-walled, which is infuriating. If you have data in the form of a candidate summary, reference(s), and a verified ROUGE score you do not mind sharing, I would love to add that to the test harness. 
 
