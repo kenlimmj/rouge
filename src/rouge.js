@@ -206,7 +206,7 @@
          * @param  Boolean jackKnife    Flag for whether jackknifing should be used
          * @return Number               The calculated ROUGE-N value
          */
-        var evalNGram = function(candidate, reference, n=1, jackKnife=false) {
+        var evalNGram = function(candidate, reference, n, jackKnife) {
             // Tokenize the candidate input and extract grams
             var candidateWords = candidate.match(/\w+/g),
                 candidateGrams = extractGram(candidateWords, n);
