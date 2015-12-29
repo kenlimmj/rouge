@@ -79,7 +79,7 @@
             // of the reference input, and the number of rows corresponds to
             // the length of the candidate input.
             for (var i = 0; i <= trimmedReference.length; i++) {
-                cTable.push(Uint8Array(trimmedCandidate.length + 1));
+                cTable.push(new Uint8Array(trimmedCandidate.length + 1));
             }
 
             // Perform the Bellman-Ford Update by looping through the update table.

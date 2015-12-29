@@ -4,7 +4,7 @@
   "description": "Recall-Oriented Understudy for Gisting Evaluation (ROUGE) Evaluation Functions",
   "main": "src/rouge.js",
   "scripts": {
-    "test": "mocha"
+    "test": "gulp && mocha"
   },
   "repository": {
     "type": "git",
@@ -31,6 +31,7 @@
     "mocha-unfunk-reporter": "^0.4.0"
   },
   "dependencies": {
-    "lodash-node": "^2.4.1"
+    "lodash-node": "^2.4.1",
+    "mocha": "^2.3.4"
   }
 }

@@ -10,7 +10,7 @@
 var _ = require('lodash-node'),
     chai = require('chai'),
     expect = chai.expect,
-    rouge = require('../src/rouge.js');
+    rouge = require('../dist/lib.js');
 
 chai.use(require('chai-things'));
 
