@@ -2,7 +2,7 @@
  * @Author: Lim Mingjie, Kenneth
  * @Date:   2014-12-21 01:48:14
  * @Last Modified by:   Astrianna
- * @Last Modified time: 2015-01-14 17:08:02
+ * @Last Modified time: 2015-01-14 17:08:24
  *
  * @flow
  */
@@ -79,7 +79,7 @@
       // of the reference input, and the number of rows corresponds to
       // the length of the candidate input.
       for (var i = 0; i <= trimmedReference.length; i++) {
-        cTable.push(Uint8Array(trimmedCandidate.length + 1));
+        cTable.push(new Uint8Array(trimmedCandidate.length + 1));
       }
 
       // Perform the Bellman-Ford Update by looping through the update table.
@@ -209,11 +209,6 @@
     var evalNGram = function (candidate, reference) {
       var n = arguments[2] === undefined ? 1 : arguments[2];
       var jackKnife = arguments[3] === undefined ? false : arguments[3];
-      // Specify some sane defaults. The original paper suggests that unigrams
-      // give good approximation of human behavior, and statistics is a nice thing.
-      // var n = n || 1,
-      //     jackKnife = jackKnife !== false;
-
       // Tokenize the candidate input and extract grams
       var candidateWords = candidate.match(/\w+/g),
           candidateGrams = extractGram(candidateWords, n);
