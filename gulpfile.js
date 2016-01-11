@@ -1,22 +1,24 @@
-/*
- * @Author: Astrianna
- * @Date:   2015-01-14 17:02:35
- * @Last Modified by:   Astrianna
- * @Last Modified time: 2015-01-14 17:06:15
- */
-
 'use strict';
 
-var gulp = require('gulp'),
-    sourcemaps = require('gulp-sourcemaps'),
-    concat = require('gulp-concat'),
-    to5 = require('gulp-6to5');
+const gulp = require('gulp');
 
-gulp.task('default', function() {
-    return gulp.src('src/*.js')
-        .pipe(sourcemaps.init())
-        .pipe(to5())
-        .pipe(concat('lib.js'))
-        .pipe(sourcemaps.write('.'))
-        .pipe(gulp.dest('dist'))
+const concat = require('gulp-concat');
+const plumber = require('gulp-plumber');
+const rollup = require('gulp-rollup');
+const sourcemaps = require('gulp-sourcemaps');
+
+const babel = require('rollup-plugin-babel');
+
+gulp.task('bundleJS', () => {
+  gulp.src('src/rouge.js', { read: false })
+      .pipe(plumber())
+      .pipe(rollup({
+        format: 'umd',
+        sourceMaps: process.env.NODE_ENV === 'production' ? true : false,
+        plugins: babel(),
+      }))
+      .pipe(plumber.stop())
+      .pipe(gulp.dest('dist'));
 });
+
+gulp.task('default', ['bundleJS']);
