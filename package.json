@@ -2,7 +2,7 @@
   "name": "rouge",
   "version": "1.0.3",
   "description": "Recall-Oriented Understudy for Gisting Evaluation (ROUGE) Evaluation Functions",
-  "main": "src/rouge.js",
+  "main": "dist/rouge.js",
   "scripts": {
     "test": "mocha"
   },
@@ -31,6 +31,8 @@
     "mocha-unfunk-reporter": "^0.4.0"
   },
   "dependencies": {
+    "core-decorators": "^0.9.2",
+    "lodash": "^4.0.0",
     "lodash-node": "^2.4.1"
   }
 }
