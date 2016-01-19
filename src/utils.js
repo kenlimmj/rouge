@@ -3,7 +3,33 @@ import {
   TREEBANK_CONTRACTIONS,
 } from './constants';
 
+/**
+ * Splits a sentence into an array of word tokens
+ * in accordance with the Penn Treebank guidelines.
+ *
+ * NOTE: This method assumes that the input is a single
+ * sentence only. Providing multiple sentences can trigger
+ * edge cases which have been not been accounted for.
+ *
+ * Adapted from Titus Wormer's [port](https://gist.github.com/wooorm/8504606) of the Penn Treebank Tokenizer
+ *
+ * @method treeBankTokenize
+ * @param  {String}           input [description]
+ * @return {Array<String>}          [description]
+ */
 export function treeBankTokenize(input) {
+  // Does the following things in order of appearance by line:
+  // 1. Replace quotes at the sentence start position with double ticks
+  // 2. Wrap spaces around a double quote preceded by opening brackets
+  // 3. Wrap spaces around a non-unicode ellipsis
+  // 4. Wrap spaces around some punctuation signs (;@#$%&)
+  // 5. Wrap spaces around a period and zero or more closing brackets
+  //    (or quotes), when not preceded by a period and when followed
+  //    by the end of the string. Only splits final periods because
+  //    sentence tokenization is assumed as a preprocessing step
+  // 6. Wrap spaces around all exclamation marks and question marks
+  // 7. Wrap spaces around opening and closing brackets
+  // 8. Wrap spaces around en-dashes
   let parse = input.replace(/^\"/, '``')
                    .replace(/([ (\[{<])"/g, '$1 `` ')
                    .replace(/\.\.\./g, ' ... ')
@@ -13,8 +39,15 @@ export function treeBankTokenize(input) {
                    .replace(/[\]\[\(\)\{\}<>]/g, ' $& ')
                    .replace(/--/g, ' -- ');
 
+  // Wrap spaces at the start and end of the sentence for consistency
+  // i.e. reduce the number of Regex matches required
   parse = ` ${parse} `;
 
+  // Does the following things in order of appearance by line:
+  // 1. Replace double quotes with a pair of single quotes wrapped with spaces
+  // 2. Wrap possessive or closing single quotes
+  // 3. Add a space before single quotes followed by `s`, `m`, or `d` and a space
+  // 4. Add a space before occurrences of `'ll`, `'re`, `'ve` or `n't`
   parse = parse.replace(/"/g, ' \'\' ')
                .replace(/([^'])' /g, '$1 \' ')
                .replace(/'([sSmMdD]) /g, ' \'$1 ')
@@ -22,31 +55,47 @@ export function treeBankTokenize(input) {
 
   let iterator = -1;
   while (iterator++ < TREEBANK_CONTRACTIONS.length) {
+    // Break uncommon contractions with a space and wrap-in spaces
     parse = parse.replace(TREEBANK_CONTRACTIONS[iterator], ' $1 $2 ');
   }
 
+  // Concatenate double spaces and remove start/end spaces
   parse = parse.replace(/\ \ +/g, ' ')
                .replace(/^\ |\ $/g, '');
 
+  // Split on spaces (original and inserted) to return the tokenized result
   return parse.split(' ');
 }
 
+/**
+ * Splits a body of text into an array of sentences
+ * using a rule-based segmentation approach.
+ *
+ * Adapted from Spencer Mountain's [nlp_compromise](https://github.com/spencermountain/nlp_compromise/) library
+ *
+ * @method sentenceSegment
+ * @param  {String}         input [description]
+ * @return {Array<String>}        [description]
+ */
 export function sentenceSegment(input) {
   const abbrvReg = new RegExp('\\b(' + GATE_SUBSTITUTIONS.join('|') + ')[.!?] ?$', 'i');
   const acronymReg = new RegExp('[ |\.][A-Z]\.?$', 'i');
   const ellipseReg = new RegExp('\\.\\.\\.*$');
 
+  // Split sentences naively based on common terminals (.?!")
   let chunks = input.split(/(\S.+?[.\?!])(?=\s+|$|")/g);
 
   let acc = [];
   for (let idx = 0; idx < chunks.length; i++) {
     if (chunks[idx]) {
+      // Trim whitespace
       chunks[idx] = chunks[idx].replace(/^\s+|\s+$/g, '');
 
       if (chunks[idx + 1] &&
           chunks[idx].match(abbrvReg) ||
           chunks[idx].match(acronymReg) ||
           chunks[idx].match(ellipseReg)) {
+        // Merge chunks that match known contractions/abbreviations back together
         chunks[idx + 1] = (chunks[idx] || '') + ' ' + (chunks[idx + 1] || '').replace(/ +/g, ' ');
       } else if (chunks[idx] && chunks[idx].length > 0) {
         acc.push(chunks[idx]);
@@ -55,13 +104,41 @@ export function sentenceSegment(input) {
     }
   }
 
+  // If no matches were found, return the input treated as a single sentence
   return acc.length === 0 ? [input] : acc;
 }
 
+/**
+ * Computes the factorial of a number.
+ *
+ * This function uses a tail-recursive call to avoid
+ * blowing the stack when computing inputs with a large
+ * recursion depth.
+ *
+ * If this function will be called repeatedly within
+ * the same scope, it is highly recommended that the
+ * user memoize the function (e.g. lodash.memoize).
+ *
+ * @method fact
+ * @param  {Number} x   [description]
+ * @param  {Number} acc [description]
+ * @return {Number}     [description]
+ */
 export function fact(x, acc = 1) {
   return x === 1 ? acc : fact(x - 1, x * acc);
 }
 
+/**
+ * Returns the skip bigrams for an array of word tokens.
+ *
+ * The result is returned via a generator to minimize
+ * memory use when parsing large bodies of text.
+ *
+ * @method skipBigram
+ * @param  {Array<String>}          tokens    [description]
+ * @param  {Number}                 gapLength [description]
+ * @return {Array<Array<String>>}             [description]
+ */
 export function* skipBigram(tokens, gapLength = 2) {
   if (gapLength < 1) {
     throw new RangeError('Gap length must be greater than 0');
@@ -76,7 +153,19 @@ export function* skipBigram(tokens, gapLength = 2) {
   }
 }
 
-export function* nGram(tokens, n = 2) {
+/**
+ * Returns n-grams for an array of word tokens.
+ *
+ * The result is returned via a generator to minimize
+ * memory use when parsing large bodies of text.
+ *
+ * @method nGram
+ * @param  {Array<String>}          tokens [description]
+ * @param  {Number}                 n      [description]
+ * @param  {Object}                 pad    [description]
+ * @return {Array<Array<String>>}          [description]
+ */
+export function* nGram(tokens, n = 2, pad = { start: false, end: false, val: '<S>' }) {
   if (tokens.length < n) {
     throw new RangeError('Gram size cannot be larger than the number of tokens available');
   }
@@ -84,7 +173,13 @@ export function* nGram(tokens, n = 2) {
   if (n === 1) {
     yield* tokens;
   } else {
-    // TODO(Kenneth): Add padding options
+    if (pad.start) {
+      for (let i = 0; i < n - 1; i++) tokens.unshift(pad.val);
+    }
+
+    if (pad.end) {
+      for (let i = 0; i < n - 1; i++) tokens.push(pad.val);
+    }
 
     for (let idx = 0; idx < (tokens.length - n); idx++) {
       yield tokens.slice(idx, idx + n);
@@ -92,6 +187,14 @@ export function* nGram(tokens, n = 2) {
   }
 }
 
+/**
+ * Calculates C(val, 2), i.e. the number of ways 2
+ * items can be chosen from `val` items.
+ *
+ * @method comb2
+ * @param  {Number} val [description]
+ * @return {Number}     [description]
+ */
 export function comb2(val) {
   if (val < 2) {
     throw new RangeError('Input must be greater than 2');
@@ -100,27 +203,67 @@ export function comb2(val) {
   return 0.5 * val * (val - 1);
 }
 
-export function jackKnife(cands, ref, evalMethod) {
+/**
+ * Evaluates the jackknife resampling result for a set of
+ * candidate summaries vs. a reference summary.
+ *
+ * @method jackKnife
+ * @param  {Array<String>}  cands      [description]
+ * @param  {String}         ref        [description]
+ * @param  {Function}       func       [description]
+ * @param  {Function}       test       [description]
+ * @return {Number}                    [description]
+ */
+export function jackKnife(cands, ref, func, test = (x) => x / x.length) {
   if (cands.length < 2) {
     throw new RangeError('Candidate array must contain more than one element');
   }
 
-  const pairs = cands.map(c => evalMethod(c, rref));
-  const numPairs = pairs.length;
+  const pairs = cands.map(c => func(c, ref));
 
   let acc = 0;
-  for (let idx = 0; idx < numPairs; idx++) {
+  for (let idx = 0; idx < pairs.length; idx++) {
     let sample = pairs.splice(idx, 1);
     acc += Math.max(...sample);
   }
 
-  return acc / numPairs;
+  return test(acc);
 }
 
+/**
+ * Calculates the ROUGE f-measure for a given precision
+ * and recall score.
+ *
+ * The default value of beta is 0.5, which is equivalent
+ * to the mean-averaged f-score. However, DUC evaluation
+ * methods favor precision by setting beta to an arbitary
+ * large number. To replicate this, set beta to any value
+ * larger than 1.
+ *
+ * @method fMeasure
+ * @param  {Number} p    [description]
+ * @param  {Number} r    [description]
+ * @param  {Number} beta [description]
+ * @return {Number}      [description]
+ */
 export function fMeasure(p, r, beta = 0.5) {
-  return ((1 + beta * beta) * r * p) / (r + beta * beta * p);
+  if (beta < 0) {
+    throw new RangeError('beta value must be greater than 0');
+  } else if (0 <= beta <= 1) {
+    return ((1 + beta * beta) * r * p) / (r + beta * beta * p);
+  } else {
+    // TODO
+  }
 }
 
+/**
+ * Computes the set intersection of two arrays
+ *
+ * @method intersection
+ * @param  {Iterable<T>}     a [description]
+ * @param  {Iterable<T>}     b [description]
+ * @return {Array<T>}          [description]
+ */
 export function intersection(a, b) {
   const test = new Set(a);
   const ref = new Set(b);
@@ -128,6 +271,19 @@ export function intersection(a, b) {
   return [...test].filter(elem => ref.has(elem));
 }
 
+/**
+ * Computes the longest common subsequence for two arrays.
+ * This function returns the elements from the two arrays
+ * that form the LCS, in order of their appearance.
+ *
+ * For speed, the search-space is prunned by eliminating
+ * common entities at the start and end of both input arrays.
+ *
+ * @method lcs
+ * @param  {Array<T>} a [description]
+ * @param  {Array<T>} b [description]
+ * @return {Array<T>}   [description]
+ */
 export function lcs(a, b) {
   let start = [];
   let end = [];
