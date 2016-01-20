@@ -8,14 +8,18 @@ const rollup = require('gulp-rollup');
 const sourcemaps = require('gulp-sourcemaps');
 
 const babel = require('rollup-plugin-babel');
+const uglify = require('rollup-plugin-uglify');
 
 gulp.task('bundleJS', () => {
-  gulp.src('src/rouge.js', { read: false })
+  gulp.src('lib/rouge.js')
       .pipe(plumber())
       .pipe(rollup({
-        format: 'umd',
-        sourceMaps: process.env.NODE_ENV === 'production' ? true : false,
-        plugins: babel(),
+        format: 'cjs',
+        sourceMap: process.env.NODE_ENV === 'production' ? true : false,
+        plugins: [
+          babel(),
+          uglify(),
+        ],
       }))
       .pipe(plumber.stop())
       .pipe(gulp.dest('dist'));
