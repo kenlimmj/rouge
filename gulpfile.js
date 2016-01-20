@@ -14,7 +14,7 @@ gulp.task('bundleJS', () => {
   gulp.src('lib/rouge.js')
       .pipe(plumber())
       .pipe(rollup({
-        format: 'cjs',
+        format: 'umd',
         sourceMap: process.env.NODE_ENV === 'production' ? true : false,
         plugins: [
           babel(),
