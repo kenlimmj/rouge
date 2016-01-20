@@ -51,8 +51,8 @@ export function rougeL(cand, ref, opts = {
   });
 
   const lcsSum = lcsAcc.reduce((x, y) => x + y);
-  const lcsRecall = lcsSum / candWords;
-  const lcsPrec = lcsSum / refWords;
+  const lcsRecall = lcsSum / candWords.length;
+  const lcsPrec = lcsSum / refWords.length;
 
   return utils.fMeasure(lcsPrec, lcsRecall, opts.beta);
 }
