@@ -2,9 +2,10 @@
   "name": "rouge",
   "version": "2.0.0",
   "description": "Recall-Oriented Understudy for Gisting Evaluation (ROUGE) Evaluation Functions",
-  "main": "dist/rouge.js",
+  "main": "dist/es5/rouge.js",
+  "jsnext:main": "dist/es6/rouge.js",
   "scripts": {
-    "test": "mocha"
+    "test": "babel-node ./node_modules/.bin/isparta cover --report text --report html _mocha"
   },
   "repository": {
     "type": "git",
@@ -24,17 +25,33 @@
   "devDependencies": {
     "babel-plugin-transform-flow-strip-types": "^6.4.0",
     "babel-preset-es2015-rollup": "^1.1.1",
+    "chai": "^3.4.1",
     "gulp": "^3.9.0",
+    "gulp-babel": "^6.1.1",
     "gulp-concat": "^2.6.0",
+    "gulp-foreach": "^0.1.0",
     "gulp-plumber": "^1.0.1",
     "gulp-rollup": "^1.7.0",
     "gulp-sourcemaps": "^1.6.0",
+    "isparta": "^4.0.0",
+    "istanbul": "^0.4.2",
+    "mocha": "^2.3.4",
+    "mocha-unfunk-reporter": "^0.4.0",
     "rollup-plugin-babel": "^2.3.9",
-    "rollup-plugin-uglify": "^0.1.0"
+    "rollup-plugin-uglify": "^0.1.0",
+    "run-sequence": "^1.1.5"
   },
   "dependencies": {},
   "directories": {
     "lib": "lib",
     "test": "test"
+  },
+  "babel": {
+    "presets": [
+      "es2015-rollup"
+    ],
+    "plugins": [
+      "transform-flow-strip-types"
+    ]
   }
 }
