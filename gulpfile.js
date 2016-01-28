@@ -27,10 +27,10 @@ function stripFlowTypes(s) {
           .pipe(sourcemaps.init())
           .pipe(babel({
             babelrc: false,
-            comments: process.env.NODE_ENV === 'production' ? true : false,
-            compact: process.env.NODE_ENV === 'production' ? true : false,
+            comments: process.env.NODE_ENV === 'development' ? true : false,
+            compact: process.env.NODE_ENV === 'development' ? false : true,
             plugins: ['transform-flow-strip-types'],
-            sourceMaps: process.env.NODE_ENV === 'production' ? true : false,
+            sourceMaps: true,
           }))
           .pipe(sourcemaps.write('.'))
           .pipe(plumber.stop())
@@ -40,15 +40,19 @@ function stripFlowTypes(s) {
 gulp.task('bundleJS_es5', () => {
   let plugins = [rollupPlugins.babel()];
 
-  if (process.env.NODE_ENV === 'production') plugins.push(rollupPlugins.uglify());
+  if (process.env.NODE_ENV === 'production') {
+    plugins.push(rollupPlugins.uglify());
+  }
 
   gulp.src(JS_PATHS.entryPoint, { read: false })
       .pipe(plumber())
+      .pipe(sourcemaps.init())
       .pipe(rollup({
         format: 'cjs',
-        sourceMap: process.env.NODE_ENV === 'production' ? true : false,
+        sourceMap: true,
         plugins: plugins,
       }))
+      .pipe(sourcemaps.write('.'))
       .pipe(plumber.stop())
       .pipe(gulp.dest(path.join(JS_PATHS.dest, 'es5')));
 });
