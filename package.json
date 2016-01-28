@@ -36,7 +36,7 @@
     "isparta": "^4.0.0",
     "istanbul": "^0.4.2",
     "mocha": "^2.3.4",
-    "mocha-unfunk-reporter": "^0.4.0",
+    "mocha-better-spec-reporter": "^3.0.1",
     "rollup-plugin-babel": "^2.3.9",
     "rollup-plugin-uglify": "^0.1.0",
     "run-sequence": "^1.1.5"
