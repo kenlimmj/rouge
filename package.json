@@ -5,7 +5,7 @@
   "main": "dist/es5/rouge.js",
   "jsnext:main": "dist/es6/rouge.js",
   "scripts": {
-    "test": "babel-node ./node_modules/.bin/isparta cover --report text --report html _mocha"
+    "test": "babel-node ./node_modules/.bin/isparta cover --report html _mocha"
   },
   "repository": {
     "type": "git",
