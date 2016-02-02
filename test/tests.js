@@ -4,14 +4,13 @@
 * @Date:   2016-01-21T12:04:28-05:00
 * @Email:  me@kenlimmj.com
 * @Last modified by:   Lim Mingjie, Kenneth
-* @Last modified time: 2016-01-26T23:29:05-05:00
+* @Last modified time: 2016-02-01T22:53:43-05:00
 */
 
 'use strict';
 
 const assert = require('chai').assert;
 const rouge = require('../dist/es5/rouge');
-const parallel = require('mocha.parallel');
 
 const deepEqual = assert.deepEqual;
 const equal = assert.strictEqual;
@@ -20,7 +19,7 @@ const sameMembers = assert.sameMembers;
 const throws = assert.throw;
 
 suite('Utility Functions', () => {
-  parallel('fact', () => {
+  suite('fact', () => {
     const fact = rouge.fact;
 
     test('should throw RangeError for -1!', () => throws(() => fact(-1), RangeError));
@@ -31,9 +30,10 @@ suite('Utility Functions', () => {
     test('should return 120 for 5!', () => equal(fact(5), 120));
     test('should return 3628800 for 10!', () => equal(fact(10), 3628800));
     test('should return 2432902008176640000 for 20!', () => equal(fact(20), 2432902008176640000));
+    test('should return 2432902008176640000 for 20! using cache', () => equal(fact(20), 2432902008176640000));
   });
 
-  parallel('comb2', () => {
+  suite('comb2', () => {
     const comb2 = rouge.comb2;
 
     test('should throw RangeError for C(1,2)', () => throws(() => comb2(1), RangeError));
@@ -43,17 +43,34 @@ suite('Utility Functions', () => {
     test('should return 499500 for C(1000,2)', () => equal(comb2(1000), 499500));
   });
 
-  parallel('arithmeticMean', () => {
-    test('should throw RangeError for empty array', () => throws(() => rouge.arithmeticMean([]), RangeError));
+  suite('arithmeticMean', () => {
+    const am = rouge.arithmeticMean;
 
-    test('should return singleton value of singleton array', () => equal(rouge.arithmeticMean([5]), 5));
-    test('should return value of homogeneous array', () => equal(rouge.arithmeticMean([5, 5, 5]), 5));
+    test('should throw RangeError for empty array', () => throws(() => am([]), RangeError));
 
-    test('should return 2 for [1, 2, 3]', () => equal(rouge.arithmeticMean([1, 2, 3]), 2));
-    test('should return 2.5 for [1, 2, 3, 4]', () => equal(rouge.arithmeticMean([1, 2, 3, 4]), 2.5));
+    test('should return singleton value of singleton array', () => equal(am([5]), 5));
+    test('should return value of homogeneous array', () => equal(am([5, 5, 5]), 5));
+
+    test('should return 2 for [1, 2, 3]', () => equal(am([1, 2, 3]), 2));
+    test('should return 2.5 for [1, 2, 3, 4]', () => equal(am([1, 2, 3, 4]), 2.5));
   });
 
-  parallel('lcs', () => {
+  suite('intersection', () => {
+    const ins = rouge.intersection;
+
+    test('should return empty array for two empty inputs', () => deepEqual(ins([], []), []));
+    test('should return empty array for first empty input', () => deepEqual(ins([], [2]), []));
+    test('should return empty array for second empty input', () => deepEqual(ins([2], []), []));
+
+    test('should return singleton value of singleton array', () => sameMembers(ins([2], [2]), [2]));
+    test('should return identical value of identical arrays', () => sameMembers(ins([1, 2, 3], [1, 2, 3]), [1, 2, 3]));
+
+    test('should return [2] for [1, 2, 3] and [2, 4, 6]', () => sameMembers(ins([1, 2, 3], [2, 4, 6]), [2]));
+    test('should return [2, 3] for [1, 2, 3] and [2, 3, 6]', () => sameMembers(ins([1, 2, 3], [2, 3, 6]), [2, 3]));
+    test('should return [1, 2, 3] for [1, 2, 3] and [1, 2, 3, 6]', () => sameMembers(ins([1, 2, 3], [1, 2, 3, 6]), [1, 2, 3]));
+  });
+
+  suite('lcs', () => {
     const lcs = rouge.lcs;
 
     test('should return empty array for empty first input', () => deepEqual(lcs([], [1]), []));
@@ -68,16 +85,46 @@ suite('Utility Functions', () => {
     });
   });
 
-  parallel('nGram', () => {
+  suite('nGram', () => {
+    const nGram = rouge.nGram;
+    const data = ['a', 'b', 'c', 'd'];
 
+    test('should throw RangeError for ngram size < 1', () => throws(() => nGram(data, 0)), RangeError);
+    test('should throw RangeError for invalid ngram size', () => throws(() => nGram(data, 5)), RangeError);
+
+    test(`should return ['a', 'b', 'c', 'd'] for n = 1`, () => sameMembers(nGram(data, 1), ['a', 'b', 'c', 'd']));
+    test(`should return ['a b', 'b c', 'c d'] for n = 2`, () => sameMembers(nGram(data, 2), ['a b', 'b c', 'c d']));
+    test(`should return ['a b c', 'b c d'] for n = 3`, () => sameMembers(nGram(data, 3), ['a b c', 'b c d']));
+    test(`should return ['a b c d'] for n = 4`, () => sameMembers(nGram(data, 4), ['a b c d']));
+
+    test('should pad only the start of the string',
+         () => sameMembers(nGram(data, 4, { start: true }),
+                           ['<S> <S> <S> a', '<S> <S> a b', '<S> a b c', 'a b c d']));
+    test('should pad only the end of the string',
+         () => sameMembers(nGram(data, 4, { end: true }),
+                           ['a b c d', 'b c d <S>', 'c d <S> <S>', 'd <S> <S> <S>']));
+    test('should pad both the start and end of the string',
+         () => sameMembers(nGram(data, 4, { start: true, end: true }),
+                           ['<S> <S> <S> a', '<S> <S> a b', '<S> a b c', 'a b c d', 'b c d <S>', 'c d <S> <S>', 'd <S> <S> <S>']));
+    test('should change the padding word',
+         () => sameMembers(nGram(data, 4, { start: true, val: '<UNK>' }),
+                           ['<UNK> <UNK> <UNK> a', '<UNK> <UNK> a b', '<UNK> a b c', 'a b c d']));
   });
 
-  parallel('skipBigram', () => {
+  suite('skipBigram', () => {
+    const sb = rouge.skipBigram;
+    const data = ['a', 'b', 'c', 'd'];
 
+    test('should throw RangeError for gapLength < 0', () => throws(() => sb(data, 0)), RangeError);
+    test('should throw RangeError for invalid gap length', () => throws(() => sb(data, 4)), RangeError);
+
+    test('should return [\'a b\', \'b c\', \'c d\'] for gapLength = 1', () => sameMembers(sb(data, 1), ['a b', 'b c', 'c d']));
+    test('should return [\'a c\', \'b d\'] for gapLength = 2', () => sameMembers(sb(data, 2), ['a c', 'b d']));
+    test('should return [\'a d\'] for gapLength = 3', () => sameMembers(sb(data, 3), ['a d']));
   });
 
   // Runs Golden Rule tests from https://github.com/diasks2/pragmatic_segmenter
-  parallel('sentenceSegment', () => {
+  suite('sentenceSegment', () => {
     const ss = rouge.sentenceSegment;
 
     test('should return empty array for empty input', () => deepEqual(ss(''), []));
@@ -206,7 +253,7 @@ suite('Utility Functions', () => {
       return deepEqual(ss('Hello!! Long time no see.'),
                          ['Hello!!', 'Long time no see.']);
     });
-    //
+
     test('should split double question marks', () => {
       return deepEqual(ss('Hello?? Who is there?'),
                          ['Hello??', 'Who is there?']);
@@ -263,13 +310,59 @@ suite('Utility Functions', () => {
     });
   });
 
-  parallel('treeBankTokenize', () => {
+  suite('treeBankTokenize', () => {
+    const tbt = rouge.treeBankTokenize;
 
+    test('should return empty array for empty input', () => deepEqual(tbt(''), []));
+
+    test('should split \'ll contractions',
+        () => sameMembers(tbt('They\'ll save and invest more.'),
+        ['They', '\'ll', 'save', 'and', 'invest', 'more', '.']));
+
+    test('should split n\'t contractions and trailing commas',
+        () => sameMembers(tbt('hi, my name can\'t hello,'),
+        ['hi', ',', 'my', 'name', 'ca', 'n\'t', 'hello', ',']));
+
+    test('should handle special symbols',
+        () => sameMembers(tbt('Good muffins cost $3.88 in New York.'),
+        ['Good', 'muffins', 'cost', '$', '3.88', 'in', 'New', 'York', '.']));
+
+    test('should handle double quotation marks',
+        () => sameMembers(tbt('\"We beat some pretty good teams to get here,\" Slocum said.'),
+        ['``', 'We', 'beat', 'some', 'pretty', 'good', 'teams', 'to', 'get', 'here', ',', '\'\'', 'Slocum', 'said', '.']));
   });
 
-  parallel('fMeasure', () => {
+  suite('jackKnife', () => {
+    // TODO
+  });
+
+  suite('fMeasure', () => {
     const fm = rouge.fMeasure;
 
+    test('should throw RangeError for OOB precision input', () => throws(() => fm(10, 0.5), RangeError));
+    test('should throw RangeError for OOB recall input', () => throws(() => fm(0.5, 10), RangeError));
+    test('should throw RangeError for OOB beta input', () => throws(() => fm(0.5, 0.75, -1), RangeError));
+
     test('should ignore precision when beta > 1', () => equal(fm(0.5, 0.75, Infinity), 0.75));
+    test('should correctly compute DUC score', () => equal(fm(0.5, 0.75, 1), 0.6));
+  });
+
+  suite('charIsUpperCase', () => {
+    const isUpper = rouge.charIsUpperCase;
+
+    test('should throw RangeError for non-character input', () => throws(() => isUpper('abcd')), RangeError);
+    test('should throw RangeError for empty input', () => throws(() => isUpper('')), RangeError);
+
+    test('should return true for uppercase input', () => equal(isUpper('A'), true));
+    test('should return false for lowercase input', () => equal(isUpper('a'), false));
+    test('should return false for non-alphabetical input', () => equal(isUpper('1'), false));
+  });
+
+  suite('strIsTitleCase', () => {
+    const isTitle = rouge.strIsTitleCase;
+
+    test('should return true for titlecase input', () => equal(isTitle('Abcd'), true));
+    test('should return false for all lowercase input', () => equal(isTitle('abcd'), false));
+    test('should return false for lowercase input with interspesed capitals', () => equal(isTitle('aBcD'), false));
   });
 });
