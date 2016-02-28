@@ -3,8 +3,8 @@
 * @Author: Lim Mingjie, Kenneth
 * @Date:   2016-01-21T12:04:28-05:00
 * @Email:  me@kenlimmj.com
-* @Last modified by:   Lim Mingjie, Kenneth
-* @Last modified time: 2016-02-01T22:53:43-05:00
+* @Last modified by:   Astrianna
+* @Last modified time: 2016-02-27T21:28:52-05:00
 */
 
 'use strict';
@@ -93,7 +93,7 @@ suite('Utility Functions', () => {
     test('should throw RangeError for invalid ngram size', () => throws(() => nGram(data, 5)), RangeError);
 
     test(`should return ['a', 'b', 'c', 'd'] for n = 1`, () => sameMembers(nGram(data, 1), ['a', 'b', 'c', 'd']));
-    test(`should return ['a b', 'b c', 'c d'] for n = 2`, () => sameMembers(nGram(data, 2), ['a b', 'b c', 'c d']));
+    test(`should return ['a b', 'b c', 'c d'] for n = 2`, () => sameMembers(nGram(data), ['a b', 'b c', 'c d']));
     test(`should return ['a b c', 'b c d'] for n = 3`, () => sameMembers(nGram(data, 3), ['a b c', 'b c d']));
     test(`should return ['a b c d'] for n = 4`, () => sameMembers(nGram(data, 4), ['a b c d']));
 
@@ -113,21 +113,22 @@ suite('Utility Functions', () => {
 
   suite('skipBigram', () => {
     const sb = rouge.skipBigram;
+
     const data = ['a', 'b', 'c', 'd'];
+    const result = ['a b', 'a c', 'a d', 'b c', 'b d', 'c d'];
 
-    test('should throw RangeError for gapLength < 0', () => throws(() => sb(data, 0)), RangeError);
-    test('should throw RangeError for invalid gap length', () => throws(() => sb(data, 4)), RangeError);
+    test('should throw RangeError for inputs with insufficient words', () => throws(() => sb(['a'])), RangeError);
 
-    test('should return [\'a b\', \'b c\', \'c d\'] for gapLength = 1', () => sameMembers(sb(data, 1), ['a b', 'b c', 'c d']));
-    test('should return [\'a c\', \'b d\'] for gapLength = 2', () => sameMembers(sb(data, 2), ['a c', 'b d']));
-    test('should return [\'a d\'] for gapLength = 3', () => sameMembers(sb(data, 3), ['a d']));
+    test('should return the correct result', () => sameMembers(sb(data), result));
   });
 
-  // Runs Golden Rule tests from https://github.com/diasks2/pragmatic_segmenter
   suite('sentenceSegment', () => {
     const ss = rouge.sentenceSegment;
 
     test('should return empty array for empty input', () => deepEqual(ss(''), []));
+
+    // Golden Rule tests from https://github.com/diasks2/pragmatic_segmenter
+    // =====================================================================
 
     test('should split simple periods', () => {
       return deepEqual(ss('Hello World. My name is Jonas.'), ['Hello World.', 'My name is Jonas.']);
@@ -333,7 +334,18 @@ suite('Utility Functions', () => {
   });
 
   suite('jackKnife', () => {
-    // TODO
+    const jk = rouge.jackKnife;
+
+    const cands = ['a', 'ab', 'abc', 'abcd'];
+    const ref = 'abcd';
+
+    const evalFunc = (a, b) => a.length + b.length;
+    const statTest = (input) => input.reduce((a, b) => a + b);
+
+    test('should throw RangeError when less than 2 candidates are provided', () => throws(() => jk(['a'], ref, evalFunc)));
+
+    test('should return the correct result using default statistical test', () => equal(jk(cands, ref, evalFunc), 7.75));
+    test('should return the correct result using alternative test', () => equal(jk(cands, ref, evalFunc, statTest), 31));
   });
 
   suite('fMeasure', () => {
@@ -364,5 +376,64 @@ suite('Utility Functions', () => {
     test('should return true for titlecase input', () => equal(isTitle('Abcd'), true));
     test('should return false for all lowercase input', () => equal(isTitle('abcd'), false));
     test('should return false for lowercase input with interspesed capitals', () => equal(isTitle('aBcD'), false));
+  });
+});
+
+suite('Core Functions', () => {
+  suite('ROUGE-N', () => {
+    const n = rouge.n;
+
+    const cand = 'pulses may ease schizophrenic voices';
+    const refs = [
+      'magnetic pulse series sent through brain may ease schizophrenic voices',
+      'yale finds magnetic stimulation some relief to schizophrenics imaginary voices',
+    ];
+
+    test('should throw RangeError for empty candidate', () => throws(() => n('', refs[0]), RangeError));
+    test('should throw RangeError for empty ref', () => throws(() => n(cand, ''), RangeError));
+
+    test('should correctly compute ROUGE-N score for ref 1', () => equal(n(cand, refs[0]), 0.4));
+    test('should correctly compute ROUGE-N score for ref 2', () => equal(n(cand, refs[1]), 0.1));
+
+    test('should correctly compute ROUGE-N score for ref 1 with different opts', () => equal(n(cand, refs[0], { n: 2 }), 1 / 3));
+    test('should correctly compute ROUGE-N score for ref 2 with different opts', () => equal(n(cand, refs[1], { n: 2 }), 0));
+  });
+
+  suite('ROUGE-S', () => {
+    const s = rouge.s;
+
+    const ref = 'police killed the gunman';
+    const cands = [
+      'police kill the gunman',
+      'the gunman kill police',
+      'the gunman police killed',
+    ];
+
+    test('should throw RangeError for empty candidate', () => throws(() => s('', ref), RangeError));
+    test('should throw RangeError for empty ref', () => throws(() => s(cands[0], ''), RangeError));
+
+    test('should return 0 for summaries with zero overlap', () => equal(s('banana yoghurt', ref), 0));
+
+    test('should correctly compute ROUGE-S score for cand 1 with different opts', () => equal(s(cands[0], ref, { beta: 1 }), 1 / 2));
+    test('should correctly compute ROUGE-S score for cand 2 with different opts', () => equal(s(cands[1], ref, { beta: 1 }), 1 / 6));
+    test('should correctly compute ROUGE-S score for cand 3 with different opts', () => equal(s(cands[2], ref, { beta: 1 }), 1 / 3));
+  });
+
+  suite('ROUGE-L', () => {
+    const l = rouge.l;
+
+    const ref = 'police killed the gunman';
+    const cands = [
+      'police kill the gunman',
+      'the gunman kill police',
+      'the gunman police killed',
+    ];
+
+    test('should throw RangeError for empty candidate', () => throws(() => l('', ref), RangeError));
+    test('should throw RangeError for empty ref', () => throws(() => l(cands[0], ''), RangeError));
+
+    test('should correctly compute ROUGE-L score for cand 1 with different opts', () => equal(l(cands[0], ref, { beta: 1 }), 3 / 4));
+    test('should correctly compute ROUGE-L score for cand 2 with different opts', () => equal(l(cands[1], ref, { beta: 1 }), 3 / 4));
+    test('should correctly compute ROUGE-L score for cand 3 with different opts', () => equal(l(cands[2], ref, { beta: 1 }), 4 / 4));
   });
 });
