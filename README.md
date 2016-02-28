@@ -1,3 +1,13 @@
+<!--
+@Author: Lim Mingjie, Kenneth <Astrianna>
+@Date:   2016-02-28T14:41:51-05:00
+@Email:  me@kenlimmj.com
+@Last modified by:   Astrianna
+@Last modified time: 2016-02-28T15:09:06-05:00
+-->
+
+
+
 ROUGE.js
 =====
 
@@ -17,65 +27,63 @@ This package is available on NPM, like so:
 ```shell
 npm install --save rouge
 ```
-To use it, simply require the package:
-```
-var rouge = require('rouge');
-```
-If you're a "browser + console" kind of person, you can clone this repository and load ``src/rouge.js`` directly. No biggie.
 
-A small but growing number of tests are written in Mocha. To run them:
+To use it, simply require the package:
+```javascript
+import 'rouge';                 # ES2015
+var rouge = require('rouge');   # ES5
+```
+
+A small but growing number of tests exist. To run them:
 ```shell
 npm test
 ```
-This should give you many lines of colorful text in your CLI. Naturally, you'll need to have Mocha installed, but you knew that already.
+This should give you many lines of colorful text in your CLI. Naturally, you'll need to have [Mocha](https://mochajs.org/) installed, but you knew that already.
+
+*NOTE:* Function test coverage is 100%, but branch coverage numbers look horrible because the current testing implementation has no way of accounting for the additional code injected by [Babel](https://babeljs.io/) when transpiling from ES2015 to ES5. A fix is in the pipeline, but if anyone has anything good, feel free to PR!
 
 ## Usage
-All three functions follow more-or-less the same type signature by design, so what works with one will work with the other. Where possible, I've tried to write everything such that it's as fast as possible, but if you're going to be doing some serious crunching, consider using a lower-level language.
+Rouge.js provides three functions:
 
-A caveat: The original paper is ambiguous in some areas, but I've tried to be as loyal as I can. Most notably, the default behavior of all metrics when multiple reference summaries are provided is to jackknife the data, because it feels more reasonable to do so than to not. You can override this as described below.
+- **ROUGE-N**: `rouge.n(cand, ref, opts)`
+- **ROUGE-L**: `rouge.l(cand, ref, opts)`
+- **ROUGE-S**: `rouge.s(cand, ref, opts)`
 
-### ``rouge.n(candidate, [reference, ...], n, jackknife)``
-Calculates a metric based on word n-gram matches. If ``n`` is not specified, it defaults to 1, because the law of the land claims that good approximation of human judgment occurs when unigrams are considered. If ``jackknife`` is not specified, it defaults to ``true``.
+All functions take in a candidate string, a reference string, and an configuration object specifying additional options. Documentation for the options are provided inline in `lib\rouge.js`. Type signatures are specified and checked using [Flowtype](http://flowtype.org/).
 
-```js
-// Where `candidate` and `reference` are both strings. 
-// This uses unigrams with jackknifing.
-rouge.n(candidate, reference, 1);
+Here's an example evaluating ROUGE-L using an averaged-F1 score instead of the DUC-F1:
+```javascript
+import l as rougeL from 'rouge';
 
-// Where `candidate` is a string, and the second argument is a string array, 
-// i.e. `reference1` and `reference2` are strings. 
-// This uses bigrams with jackknifing disabled.
-rouge.n(candidate, [reference1, reference2], 2, false);
+const ref = 'police killed the gunman';
+const cand = 'police kill the gunman';
+
+rougeL(cand, ref, { beta: 0.5 });
 ```
 
-### ``rouge.l(candidate, [reference, ...], jackknife)``
-Calculates a metric based on the longest common subsequence (LCS) of words. If ``jackknife`` is not specified, it defaults to ``true``. This uses a dynamic programming approach with search-space reduction to calculate the LCS, but life is generally better when you don't have run-on sentences in your summary, yes?
+In addition, the main functions rely on a battery of utility functions specified in `lib\utils.js`. These perform a bunch of things like quick evaluation of skip bigrams, string tokenization, sentence segmentation, and set intersections.
 
-```js
-// Where `candidate` and `reference` are both strings.
-rouge.l(candidate, reference);
+Here's an example applying jackknife resampling as described in the original paper:
+```javascript
+import n as rougeN from 'rouge';
+import jackKnife from 'utils';
 
-// Where `candidate` is a string, and the second argument is a string array, 
-// i.e. `reference1` and `reference2` are strings. 
-// This performs the calculation with jackknifing disabled.
-rouge.l(candidate, [reference1, reference2], false);
+const ref = 'police killed the gunman';
+const cands = [
+  'police kill the gunman',
+  'the gunman kill police',
+  'the gunman police killed',
+];
+
+// Standard evaluation taking the arithmetic mean
+jackKnife(cands, ref, rougeN);
+
+// A function that returns the max value in an array
+const distMax = (arr) => Math.max(...arr);
+
+// Modified evaluation taking the distribution maximum
+jackKnife(cands, ref, rougeN, distMax);
 ```
-
-### ``rouge.s(candidate, [reference, ...], jackknife)``
-Calculates a metric based on skip bigrams. If ``jackknife`` is not specified, it defaults to ``true``.
-
-```js
-// Where `candidate` and `reference` are both strings.
-rouge.s(candidate, reference);
-
-// Where `candidate` is a string, and the second argument is a string array, 
-// i.e. `reference1` and `reference2` are strings.
-// This performs the calculation with jackknifing disabled.
-rouge.s(candidate, [reference1, reference2], false);
-```
-
-## Additional Notes
-ROUGE itself is not without limitation, many of which are described by the author himself. The functions above have been written to hopefully give a user as much flexibility as possible in implementing (or stacking atop) any modifications and enhancements they might wish to add. For example, it's trivial to run a stemmer on your sentences, concatenate the results (to get a string once again) and throw them into the above. If you'd like to perform your own statistical averaging, just disable jackknifing and perform your own pairwise comparisons as needed.
 
 ## Versioning
 
@@ -97,14 +105,13 @@ For more information on SemVer, visit http://semver.org/.
 
 Have a bug or a feature request? [Please open a new issue](https://github.com/kenlimmj/rouge/issues).
 
-Before opening any issue, please search for existing issues and read the [Issue Guidelines](CONTRIBUTING.md). 
+Before opening any issue, please search for existing issues and read the [Issue Guidelines](CONTRIBUTING.md).
 
 ## Contributing
 
-Please submit all pull requests against *-wip branches. All code should pass JSHint/JSLint validation. Note that files in ``/src`` are written in ES6 syntax and transpiled to corresponding files in ``/dist`` using 6to5. 
+Please submit all pull requests against *-wip branches. All code should pass JSHint/ESLint validation. Note that files in ``/lib`` are written in ES2015 syntax and transpiled to corresponding files in ``/dist`` using Babel. Gulp build pipelines exist and should be used.
 
-The amount of data available for writing tests is unfortunately woefully inadequate. I've tried to be as thorough as possible, but that eliminates neither the possibility of nor existence of errors. The gold standard is the DUC data-set, but that too is form-walled and legal-release-walled, which is infuriating. If you have data in the form of a candidate summary, reference(s), and a verified ROUGE score you do not mind sharing, I would love to add that to the test harness. 
+The amount of data available for writing tests is unfortunately woefully inadequate. I've tried to be as thorough as possible, but that eliminates neither the possibility of nor existence of errors. The gold standard is the DUC data-set, but that too is form-walled and legal-release-walled, which is infuriating. If you have data in the form of a candidate summary, reference(s), and a verified ROUGE score you do not mind sharing, I would love to add that to the test harness.
 
 ## License
-Licensed under the MIT License. 
-
+MIT

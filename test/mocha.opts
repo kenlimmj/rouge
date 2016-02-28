@@ -1,2 +1,2 @@
---reporter mocha-unfunk-reporter
+--reporter mocha-better-spec-reporter
 --ui tdd
