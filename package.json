@@ -5,7 +5,7 @@
   "main": "dist/es5/rouge.js",
   "jsnext:main": "dist/es6/rouge.js",
   "scripts": {
-    "test": "BABEL_ENV=test babel-node ./node_modules/istanbul/lib/cli.js cover --report html _mocha"
+    "test": "babel-node ./node_modules/istanbul/lib/cli.js cover --report html _mocha"
   },
   "repository": {
     "type": "git",
