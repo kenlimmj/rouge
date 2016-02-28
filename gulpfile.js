@@ -28,7 +28,7 @@ function stripFlowTypes(s) {
           .pipe(babel({
             babelrc: false,
             comments: process.env.NODE_ENV === 'development' ? true : false,
-            compact: process.env.NODE_ENV === 'development' ? false : true,
+            compact: process.env.NODE_ENV === 'development' ? true : false,
             plugins: ['transform-flow-strip-types'],
             sourceMaps: true,
           }))
