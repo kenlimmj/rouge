@@ -30,8 +30,8 @@ npm install --save rouge
 
 To use it, simply require the package:
 ```javascript
-import 'rouge';                 # ES2015
-var rouge = require('rouge');   # ES5
+import 'rouge';                 // ES2015
+var rouge = require('rouge');   // ES5
 ```
 
 A small but growing number of tests exist. To run them:
