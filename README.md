@@ -31,6 +31,9 @@ npm install --save rouge
 To use it, simply require the package:
 ```javascript
 import 'rouge';                 // ES2015
+
+// OR
+
 var rouge = require('rouge');   // ES5
 ```
 
