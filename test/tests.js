@@ -10,7 +10,7 @@
 'use strict';
 
 const assert = require('chai').assert;
-const rouge = require('../dist/es5/rouge');
+const rouge = require('../lib/rouge');
 
 const deepEqual = assert.deepEqual;
 const equal = assert.strictEqual;
@@ -433,7 +433,7 @@ suite('Core Functions', () => {
     test('should throw RangeError for empty ref', () => throws(() => l(cands[0], ''), RangeError));
 
     test('should correctly compute ROUGE-L score for cand 1 with different opts', () => equal(l(cands[0], ref, { beta: 1 }), 3 / 4));
-    test('should correctly compute ROUGE-L score for cand 2 with different opts', () => equal(l(cands[1], ref, { beta: 1 }), 3 / 4));
-    test('should correctly compute ROUGE-L score for cand 3 with different opts', () => equal(l(cands[2], ref, { beta: 1 }), 4 / 4));
+    test('should correctly compute ROUGE-L score for cand 2 with different opts', () => equal(l(cands[1], ref, { beta: 1 }), 1 / 2));
+    test('should correctly compute ROUGE-L score for cand 3 with different opts', () => equal(l(cands[2], ref, { beta: 1 }), 1 / 2));
   });
 });

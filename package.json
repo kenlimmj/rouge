@@ -2,10 +2,16 @@
   "name": "rouge",
   "version": "2.0.0",
   "description": "Recall-Oriented Understudy for Gisting Evaluation (ROUGE) Evaluation Functions",
-  "main": "dist/es5/rouge.js",
-  "jsnext:main": "dist/es6/rouge.js",
+  "main": "dist/rouge.cjs.js",
+  "module": "dist/rouge.esm.js",
+  "files": [
+    "dist",
+    "lib"
+  ],
   "scripts": {
-    "test": "babel-node ./node_modules/istanbul/lib/cli.js cover --report html _mocha"
+    "build": "rollup -c",
+    "test": "mocha --ui tdd --require @babel/register test/tests.js",
+    "prepublishOnly": "npm run build"
   },
   "repository": {
     "type": "git",
@@ -22,36 +28,19 @@
     "url": "https://github.com/kenlimmj/rouge/issues"
   },
   "homepage": "https://github.com/kenlimmj/rouge",
+  "overrides": {
+    "serialize-javascript": "^7.0.3",
+    "diff": "^8.0.3"
+  },
   "devDependencies": {
-    "babel-plugin-transform-flow-strip-types": "^6.4.0",
-    "babel-preset-es2015-rollup": "^1.1.1",
-    "chai": "^3.4.1",
-    "gulp": "^3.9.0",
-    "gulp-babel": "^6.1.1",
-    "gulp-concat": "^2.6.0",
-    "gulp-foreach": "^0.1.0",
-    "gulp-plumber": "^1.0.1",
-    "gulp-rollup": "^1.7.0",
-    "gulp-sourcemaps": "^1.6.0",
-    "isparta": "^4.0.0",
-    "istanbul": "^0.4.2",
-    "mocha": "^2.3.4",
-    "mocha-better-spec-reporter": "^3.0.1",
-    "rollup-plugin-babel": "^2.3.9",
-    "rollup-plugin-uglify": "^0.1.0",
-    "run-sequence": "^1.1.5"
-  },
-  "dependencies": {},
-  "directories": {
-    "lib": "lib",
-    "test": "test"
-  },
-  "babel": {
-    "presets": [
-      "es2015-rollup"
-    ],
-    "plugins": [
-      "transform-flow-strip-types"
-    ]
+    "@babel/core": "^7.24.0",
+    "@babel/plugin-transform-flow-strip-types": "^7.24.0",
+    "@babel/preset-env": "^7.24.0",
+    "@babel/register": "^7.24.0",
+    "@rollup/plugin-babel": "^6.0.0",
+    "@rollup/plugin-terser": "^1.0.0",
+    "chai": "^4.3.0",
+    "mocha": "^11.7.5",
+    "rollup": "^3.29.0"
   }
 }
