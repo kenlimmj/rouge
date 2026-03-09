@@ -10,7 +10,7 @@
 'use strict';
 
 const assert = require('chai').assert;
-const rouge = require('../dist/es5/rouge');
+const rouge = require('../lib/rouge');
 
 const deepEqual = assert.deepEqual;
 const equal = assert.strictEqual;
@@ -82,6 +82,31 @@ suite('Utility Functions', () => {
     test('should return [2, 3] for [1, 2, 3] and [2, 3, 5]', () => sameMembers(lcs([1, 2, 3], [2, 3, 5]), [2, 3]));
     test('should return [w1, w3, w5] for [w1, w2, w3, w4, w5] and [w1, w3, w8, w9, w5]', () => {
       return sameMembers(lcs(['w1', 'w2', 'w3', 'w4', 'w5'], ['w1', 'w3', 'w8', 'w9', 'w5']), ['w1', 'w3', 'w5']);
+    });
+
+    // Verify LCS returns elements in correct order (old implementation reversed suffixes)
+    test('should preserve correct element ordering', () => {
+      deepEqual(lcs(['a', 'b', 'c', 'd', 'e'], ['a', 'c', 'e']), ['a', 'c', 'e']);
+    });
+
+    test('should find the true longest common subsequence via DP', () => {
+      // 'b', 'c', 'd' is the LCS (length 3), not just common elements
+      deepEqual(lcs(['a', 'b', 'c', 'd'], ['b', 'c', 'd', 'e']), ['b', 'c', 'd']);
+    });
+
+    test('should handle interleaved sequences correctly', () => {
+      // LCS of [1,3,5,7] and [1,2,3,4,5] is [1,3,5] (length 3)
+      deepEqual(lcs(['1', '3', '5', '7'], ['1', '2', '3', '4', '5']), ['1', '3', '5']);
+    });
+
+    test('should handle longer sequences where greedy matching fails', () => {
+      // A greedy approach matching first occurrences would pick 'a' early
+      // and miss the longer subsequence. DP finds the optimal.
+      const a = ['x', 'a', 'b', 'c'];
+      const b = ['a', 'b', 'c', 'x'];
+      const result = lcs(a, b);
+      equal(result.length, 3, 'LCS length should be 3');
+      deepEqual(result, ['a', 'b', 'c']);
     });
   });
 
@@ -433,7 +458,34 @@ suite('Core Functions', () => {
     test('should throw RangeError for empty ref', () => throws(() => l(cands[0], ''), RangeError));
 
     test('should correctly compute ROUGE-L score for cand 1 with different opts', () => equal(l(cands[0], ref, { beta: 1 }), 3 / 4));
-    test('should correctly compute ROUGE-L score for cand 2 with different opts', () => equal(l(cands[1], ref, { beta: 1 }), 3 / 4));
-    test('should correctly compute ROUGE-L score for cand 3 with different opts', () => equal(l(cands[2], ref, { beta: 1 }), 4 / 4));
+    test('should correctly compute ROUGE-L score for cand 2 with different opts', () => equal(l(cands[1], ref, { beta: 1 }), 1 / 2));
+    test('should correctly compute ROUGE-L score for cand 3 with different opts', () => equal(l(cands[2], ref, { beta: 1 }), 1 / 2));
+
+    // Regression test for GitHub issue #7: ROUGE-L scores diverged from
+    // the Perl reference implementation due to a broken LCS algorithm.
+    // Perl reference: ROUGE-L F(beta=1) = 0.43038
+    // Old (broken):   ROUGE-L F(beta=1) = 0.07973
+    // New (fixed):    ROUGE-L F(beta=1) ≈ 0.474  (difference from Perl due to tokenization/stemming)
+    test('should produce ROUGE-L scores close to the Perl reference implementation (issue #7)', () => {
+      const issueRef = 'brendan @entity8 is under pressure following @entity11 semi-final defeat . but the @entity10 boss says he will bounce back despite the criticism . @entity10 owners @entity9 maintain @entity8 wo n\'t be sacked . @entity13 hopes @entity18 commits his future to the @entity23 .';
+      const issueCand = 'brendan @entity8 insists he is the man to guide @entity10 to success . brendan @entity8 has not been rattled by the intensity of the criticism . @entity10 manager is under pressure following the semi-final defeat by @entity12 last sunday .';
+
+      const score = l(issueCand, issueRef, { beta: 1 });
+
+      // The Perl reference score is 0.43038. Our score should be in the
+      // same order of magnitude (the old broken LCS produced 0.0797).
+      // Differences from Perl are expected due to tokenizer/stemmer differences.
+      assert.isAbove(score, 0.35, 'ROUGE-L score should be above 0.35 (was 0.08 with broken LCS)');
+      assert.isBelow(score, 0.60, 'ROUGE-L score should be below 0.60');
+    });
+
+    // Multi-sentence ROUGE-L should correctly compute LCS union across sentences
+    test('should correctly handle multi-sentence inputs', () => {
+      const multiRef = 'the cat sat on the mat. it was a nice day.';
+      const multiCand = 'the cat was on the mat. it was a lovely day.';
+
+      const score = l(multiCand, multiRef, { beta: 1 });
+      assert.isAbove(score, 0.5, 'multi-sentence ROUGE-L should reflect significant overlap');
+    });
   });
 });
