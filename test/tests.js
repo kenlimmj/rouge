@@ -461,6 +461,14 @@ suite('Core Functions', () => {
     test('should correctly compute ROUGE-L score for cand 2 with different opts', () => equal(l(cands[1], ref, { beta: 1 }), 1 / 2));
     test('should correctly compute ROUGE-L score for cand 3 with different opts', () => equal(l(cands[2], ref, { beta: 1 }), 1 / 2));
 
+    // Recall divides by |ref|, precision divides by |cand|. With asymmetric
+    // lengths and beta≠1, a precision/recall swap produces a different F-score.
+    // ref=5 words, cand=4 words, LCS=3 → recall=3/5, prec=3/4
+    // fMeasure(3/4, 3/5, 0.5) = 5/7
+    test('should use reference length for recall and candidate length for precision', () => {
+      equal(l('police kill the gunman', 'police killed the gunman today', { beta: 0.5 }), 5 / 7);
+    });
+
     // Regression test for GitHub issue #7: ROUGE-L scores diverged from
     // the Perl reference implementation due to a broken LCS algorithm.
     // Perl reference: ROUGE-L F(beta=1) = 0.43038
